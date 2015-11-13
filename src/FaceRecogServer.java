@@ -10,7 +10,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 public class FaceRecogServer {
 	public static final int PORT=8427, LATENCY_PORT=8428;
-	RecognizeFace recognizeFace;
+	RecognizeFace recognizeFace; 
 	static int averageProcessingTime=0;
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);

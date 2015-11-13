@@ -9,8 +9,9 @@ import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
 public class FaceRecogServer {
-	public static final int PORT=8427;
+	public static final int PORT=8427, LATENCY_PORT=8428;
 	RecognizeFace recognizeFace;
+	static int averageProcessingTime=0;
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
@@ -20,6 +21,12 @@ public class FaceRecogServer {
 	public static void main(String[] args) {
 		
 		FaceRecogServer faceRecogServer = new FaceRecogServer();
+
+		//Respond to ping from cloudlet.
+		LatencyThread latencyThread=faceRecogServer.new LatencyThread();
+		new Thread(latencyThread).start();
+		
+		//Start code for listening incoming face recognition requests from clients. 
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(PORT);
@@ -55,7 +62,8 @@ public class FaceRecogServer {
 		}
 
 		public void run() {
-			System.out.println("Thread started");
+			long faceRecognitionStartTime=System.currentTimeMillis();
+			System.out.println("Recognition thread started");
 			ObjectInputStream ois;
 			byte[]faceBytes = null;
 			int rows = 0, columns = 0, type = 0;
@@ -76,11 +84,11 @@ public class FaceRecogServer {
 			
 			System.out.println("Recognizing face");
 			Imgcodecs.imwrite("face"+faceBytes.length+".png", incomingFace);
-			long startTime=System.currentTimeMillis();
+
 			float confidence=recognizeFace.recognize(incomingFace);
-			long endTime=System.currentTimeMillis();
-			long time=endTime-startTime;
-			System.out.println("Recognition time"+time);
+			long faceRecognitionEndTime=System.currentTimeMillis();
+			averageProcessingTime=(int) (faceRecognitionEndTime-faceRecognitionStartTime);
+			System.out.println("Recognition time"+averageProcessingTime);
 			System.out.println("Returning confidence"+confidence);
 			ObjectOutputStream oos;
 			try {
@@ -90,6 +98,47 @@ public class FaceRecogServer {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+
+		}
+	}
+	class LatencyThread implements Runnable {
+
+		public void run() {
+			ServerSocket serverLatencySocket = null;
+			try {
+				serverLatencySocket = new ServerSocket(LATENCY_PORT);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			// Listen for incoming latency requests from clients.
+			while (true) {
+				Socket clientLatencySocket = null;
+				ObjectInputStream ois=null;
+				try {
+					System.out.println("Server listening for incoming latency requests on "+LATENCY_PORT);
+					clientLatencySocket = serverLatencySocket.accept();
+
+					ois=new ObjectInputStream(clientLatencySocket.getInputStream());
+					String requestType=(String) ois.readObject();
+					System.out.println("New latency request to server:"+requestType);					
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				System.out.println("Returning average processing time with the latency request");
+				ObjectOutputStream oos;
+				try {
+					oos = new ObjectOutputStream(clientLatencySocket.getOutputStream());
+					oos.writeInt(averageProcessingTime);
+					oos.flush();
+					System.out.println("averageProcessingTime returned"+averageProcessingTime);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}

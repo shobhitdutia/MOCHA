@@ -8,14 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
 import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -29,10 +25,11 @@ public class GreedyCloudlet {
 	}
 	public GreedyCloudlet() {
 		ipAddressList = new ArrayList<IpAddress>();
-		ipAddressList.add(new IpAddress("localhost", 8424, 1));
-		ipAddressList.add(new IpAddress("localhost", 8425, 3));
-		ipAddressList.add(new IpAddress("localhost", 8426, 7));
-		ipAddressList.add(new IpAddress("localhost", 8427, 10));
+		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));
+/*		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));
+		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));
+		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));*/
+		
 		Collections.sort(ipAddressList);
 		
 		sendMap=new LinkedHashMap<GreedyCloudlet.IpAddress, List<Rect>>();
@@ -43,14 +40,19 @@ public class GreedyCloudlet {
 	private ArrayList<IpAddress> copyList(ArrayList<IpAddress> ipAddressList2) {
 		currentResponseTime=new ArrayList<IpAddress>();
 		for(IpAddress ipAddress:ipAddressList) {
-			currentResponseTime.add(new IpAddress(ipAddress.hostName, ipAddress.port, 0));
+			currentResponseTime.add(new IpAddress(ipAddress.hostName, ipAddress.port, ipAddress.latencyPort, 0));
 		}
 		return currentResponseTime;
 	}
 
 	public static void main(String[] args) {
 		GreedyCloudlet cloudlet = new GreedyCloudlet();
-		ServerSocket serverSocket = null;
+		cloudlet.getServerLatencies();
+		//Keep  updating server latencies, every 5 seconds.
+		LatencyThread latencyThread=cloudlet.new LatencyThread();
+		latencyThread.run();
+		
+		/*ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(8423);
 		} catch (IOException e) {
@@ -59,7 +61,7 @@ public class GreedyCloudlet {
 		//Create a new ProcessImage object and start processing image in a new thread.
 		//COMMENT THIS LATER
 		ProcessImage processImage = cloudlet.new ProcessImage(null);
-		new Thread(processImage).start();
+		new Thread(processImage).start();*/
 /*		// Listen for incoming clients.
 		//UNCOMMENT THIS LATER!!!!!!!!!!
 		while (true) {
@@ -73,6 +75,39 @@ public class GreedyCloudlet {
 			ProcessImage processImage = cloudlet.new ProcessImage(clientSocket);
 			new Thread(processImage).start();
 		}*/
+	}
+	/*
+	 * Get the server latencies & processing times. 
+	 * Loops over all the servers and updates the servers' processing latency and rtt.
+	 */
+	private void getServerLatencies() {
+		Socket clientLatencySocket = null;
+		try {
+			//Loop over all servers and get latencies
+			for(IpAddress ipAddress:ipAddressList) {
+				System.out.println("Getting latency from ip"+ipAddress.hostName);
+				long latencyStartTime=System.currentTimeMillis();
+				clientLatencySocket=new Socket(ipAddress.hostName, ipAddress.latencyPort);
+				ObjectOutputStream oos=new ObjectOutputStream(clientLatencySocket.getOutputStream());
+				oos.writeObject("getLatency");
+				ObjectInputStream ois=new ObjectInputStream(clientLatencySocket.getInputStream());
+				System.out.println("Getting int");
+				int recognitionTime=ois.readInt();
+				System.out.println("Got int");
+				long latencyEndTime=System.currentTimeMillis();
+				
+				int totalLatencyToServer=(int) (latencyEndTime-latencyStartTime);
+				ipAddress.processingTime=recognitionTime;
+				ipAddress.responseTime=totalLatencyToServer;
+				System.out.println("Latency time:"+totalLatencyToServer+", Recognition time:"+recognitionTime);
+			}
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	/* Read image from socket. 
 	 * Detects faces in an image and passes face to communication thread to send it to the server. 
@@ -116,11 +151,11 @@ public class GreedyCloudlet {
 				//Assuming faces are less than or equal to number of servers.
 				int faceCounter=0;
 				List<CommThread> threadList=new ArrayList<CommThread>();
-				int processingTime=2;
+				
 				
 				//Add the first face to the sendMap, since the first value of response time is the minimum response time.
 				addToSendMap(ipAddressList.get(0), facesArray[0]);				
-				currentResponseTime.get(0).responseTime+=(processingTime+ipAddressList.get(0).responseTime);
+				currentResponseTime.get(0).responseTime+=(ipAddressList.get(0).processingTime+ipAddressList.get(0).responseTime);
 /*				System.out.println("Adding 0th face to ip with currentResponseTime "+
 						currentResponseTime.get(0).responseTime+" j=0");*/
 				System.out.println("Adding 0th face on j=0");
@@ -132,6 +167,7 @@ public class GreedyCloudlet {
 					int smallestJ=0;
 					for(int j=0; j<=i; j++) {
 						int rt=ipAddressList.get(j).responseTime;		//Response time of jth server
+						int processingTime=ipAddressList.get(j).processingTime;
 						int processTimeForFace=rt+processingTime;		//Process time on jth server=above respone time + process time of face on server.
 						int latency=processTimeForFace+currentResponseTime.get(j).responseTime;	//Total latency if the above process time is used on jth server
 						if(latency<smallest) {
@@ -260,11 +296,12 @@ public class GreedyCloudlet {
 	}
 	class IpAddress implements Comparable<IpAddress>{
 		String hostName;
-		int port, responseTime;
+		int port, responseTime, latencyPort, processingTime;
 /*\*/
-		public IpAddress(String hostName, int port, int responseTime) {
+		public IpAddress(String hostName, int port, int latencyPort, int responseTime) {
 			this.hostName=hostName;
 			this.port=port;
+			this.latencyPort=latencyPort;
 			this.responseTime=responseTime;
 		}
 		public int compareTo(IpAddress ipAddress) {
@@ -272,6 +309,21 @@ public class GreedyCloudlet {
 		}
 		public String toString() {
 			return hostName+";"+port+";"+responseTime;
+		}
+	}
+	
+	class LatencyThread implements Runnable {
+
+		public void run() {
+				while(true) {
+					getServerLatencies();
+					try {
+						Thread.sleep(5000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 		}
 	}
 }

@@ -25,7 +25,7 @@ public class GreedyCloudlet {
 	}
 	public GreedyCloudlet() {
 		ipAddressList = new ArrayList<IpAddress>();
-		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));
+		ipAddressList.add(new IpAddress("52.25.63.31", 8427, 8428, 0));
 /*		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));
 		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));
 		ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));*/

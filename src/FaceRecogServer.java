@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -11,7 +12,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 public class FaceRecogServer {
 	public static final int PORT=8427, LATENCY_PORT=8428;
 	RecognizeFace recognizeFace; 
-	static int averageProcessingTime=0;
+	static int averageProcessingTime=0; 
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
@@ -116,7 +117,7 @@ public class FaceRecogServer {
 				Socket clientLatencySocket = null;
 				ObjectInputStream ois=null;
 				try {
-					System.out.println("Server listening for incoming latency requests on "+LATENCY_PORT);
+					System.out.println("Server listening for incoming latency requests on "+InetAddress.getLocalHost().getHostAddress()+LATENCY_PORT);
 					clientLatencySocket = serverLatencySocket.accept();
 
 					ois=new ObjectInputStream(clientLatencySocket.getInputStream());

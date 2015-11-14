@@ -15,7 +15,7 @@ public class RecognizeFace {
 	Size trainSize;
 	public RecognizeFace() {
 		fr = Face.createLBPHFaceRecognizer();
-		String personsDir = "C:\\Users\\shobhitdutia\\Google Drive\\workspace_gdrive\\OpenCVFaceRecog\\bin\\pictures";
+		String personsDir = "C:\\Users\\Administrator\\Pictures\\pictures";
 		trainSize = loadTrainDir(personsDir);
 		System.out.println("facerec trained: " + (trainSize != null) + " !");
 	}

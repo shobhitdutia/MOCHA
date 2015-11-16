@@ -13,8 +13,12 @@ import org.opencv.utils.Converters;
 public class RecognizeFace {
 	FaceRecognizer fr;
 	Size trainSize;
+	double binaryTreshold = 100;
+    int highConfidenceLevel = 70;
+
 	public RecognizeFace() {
-		fr = Face.createLBPHFaceRecognizer();
+		fr = Face.createLBPHFaceRecognizer(1, 8, 8, 8, binaryTreshold);
+		
 		String personsDir = "C:\\Users\\Administrator\\Pictures\\pictures";
 		trainSize = loadTrainDir(personsDir);
 		System.out.println("facerec trained: " + (trainSize != null) + " !");
@@ -61,9 +65,10 @@ public class RecognizeFace {
 	}
 
 	public float predict(Mat img) {
-		int[] id = { -1 };
-		double[] dist = { 0 };
+		int[] id =new int[1];
+		double[] dist = new double[1];
 		fr.predict(img, id, dist);
+		System.out.println("RESULT="+id[0]);
 		for (int i = 0; i < id.length; i++) {
 			System.out.println("id[" + i + "]" + "=" + id[i]);
 		}

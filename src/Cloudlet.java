@@ -24,11 +24,11 @@ public class Cloudlet {
 	}
 	public Cloudlet() {
 		responseTime = new TreeMap<Integer, IpAddress>();
-		responseTime.put(2, new IpAddress("localhost", 8424));
-		responseTime.put(1, new IpAddress("localhost", 8425));
+		responseTime.put(2, new IpAddress("52.26.7.241", 8427));
+/*		responseTime.put(1, new IpAddress("localhost", 8425));
 		responseTime.put(4, new IpAddress("localhost", 8426));
 		responseTime.put(3, new IpAddress("localhost", 8427));
-		responseTime.put(5, new IpAddress("localhost", 8428));
+		responseTime.put(5, new IpAddress("localhost", 8428));*/
 		//responseTime.put(6, new IpAddress("localhost", 8429));
 	}
 
@@ -81,7 +81,7 @@ public class Cloudlet {
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}*/
-	        imageMatrix = Imgcodecs.imread("C:\\Users\\shobhitdutia\\Google Drive\\workspace_gdrive\\OpenCVFaceRecog\\bin\\testImage\\group.jpg");
+	        imageMatrix = Imgcodecs.imread("C:\\Users\\shobhitdutia\\Google Drive\\workspace_gdrive\\OpenCVFaceRecog\\bin\\testImage\\1.jpg");
 			FaceDetection faceDetection = new FaceDetection();
 			System.out.println("Detecting faces in image");
 			
@@ -101,7 +101,7 @@ public class Cloudlet {
 				int faceCounter=0;
 				List<CommThread> threadList=new ArrayList<CommThread>();
 				for (Map.Entry<Integer, IpAddress> entry : responseTime.entrySet()) {
-					if(faceCounter==facesArray.length) {
+					if(faceCounter==1) {
 						break;
 					}
 					Rect faceDimention=facesArray[faceCounter];

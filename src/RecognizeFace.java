@@ -13,11 +13,9 @@ import org.opencv.utils.Converters;
 public class RecognizeFace {
 	FaceRecognizer fr;
 	Size trainSize;
-	double binaryTreshold = 100;
-    int highConfidenceLevel = 70;
 
 	public RecognizeFace() {
-		fr = Face.createLBPHFaceRecognizer(1, 8, 8, 8, binaryTreshold);
+		fr = Face.createLBPHFaceRecognizer();
 		
 		String personsDir = "C:\\Users\\Administrator\\Pictures\\pictures";
 		trainSize = loadTrainDir(personsDir);

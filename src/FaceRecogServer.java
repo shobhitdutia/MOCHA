@@ -11,18 +11,19 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 public class FaceRecogServer {
 	public static final int PORT=8427, LATENCY_PORT=8428;
-
+	static RecognizeFace recognizeFace; 
+	
 	//static int averageProcessingTime=0; 
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
 	public FaceRecogServer() {
-	
+
 	}
 	public static void main(String[] args) {
 		
 		FaceRecogServer faceRecogServer = new FaceRecogServer();
-
+		recognizeFace=new RecognizeFace();
 		//Respond to ping from cloudlet.
 		LatencyThread latencyThread=faceRecogServer.new LatencyThread();
 		new Thread(latencyThread).start();

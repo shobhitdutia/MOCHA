@@ -11,12 +11,10 @@ import org.opencv.imgcodecs.Imgcodecs;
 	 */
 	class RecognizeThread extends Thread {
 		Socket clientSocket;
-		RecognizeFace recognizeFace; 
 		static int averageProcessingTime;
 		
 		public RecognizeThread(Socket clientSocket) {
 			this.clientSocket = clientSocket;
-			recognizeFace=new RecognizeFace();
 		}
 
 		public void run() {
@@ -43,7 +41,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 			System.out.println("Recognizing face");
 			Imgcodecs.imwrite("face"+faceBytes.length+".png", incomingFace);
 
-			float confidence=recognizeFace.recognize(incomingFace);
+			float confidence=FaceRecogServer.recognizeFace.recognize(incomingFace);
 			long faceRecognitionEndTime=System.currentTimeMillis();
 		    averageProcessingTime=(int) (faceRecognitionEndTime-faceRecognitionStartTime);
 			System.out.println("Recognition time"+averageProcessingTime);

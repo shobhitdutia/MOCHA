@@ -41,7 +41,10 @@ import org.opencv.imgcodecs.Imgcodecs;
 			System.out.println("Recognizing face");
 			Imgcodecs.imwrite("face"+faceBytes.length+".png", incomingFace);
 
-			float confidence=FaceRecogServer.recognizeFace.recognize(incomingFace);
+			float confidence;
+			synchronized(FaceRecogServer.recognizeFace) {
+				confidence=FaceRecogServer.recognizeFace.recognize(incomingFace);				
+			}
 			long faceRecognitionEndTime=System.currentTimeMillis();
 		    averageProcessingTime=(int) (faceRecognitionEndTime-faceRecognitionStartTime);
 			System.out.println("Recognition time"+averageProcessingTime);

@@ -1,11 +1,11 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,10 +40,10 @@ public class GreedyCloudlet {
 		currentResponseTimeMap.put("52.26.77.103",new IpAddress("52.26.77.103", 8427, 8428, 0, 0));
 		
 		ipAddressList.add(new IpAddress("52.33.160.214", 8427, 8428, 10, 2));  //mocha 1.3
-		currentResponseTimeMap.put("52.33.160.214",new IpAddress("52.33.160.214", 8427, 8428, 0, 0));*/
+		currentResponseTimeMap.put("52.33.160.214",new IpAddress("52.33.160.214", 8427, 8428, 0, 0));
 		
 		ipAddressList.add(new IpAddress("52.26.7.241", 8427, 8428, 15, 2));		//mocha 1.4
-		currentResponseTimeMap.put("52.26.7.241",new IpAddress("52.26.7.241", 8427, 8428, 0, 0));
+		currentResponseTimeMap.put("52.26.7.241",new IpAddress("52.26.7.241", 8427, 8428, 0, 0));*/
 	
 		
  /* 	ipAddressList.add(new IpAddress("localhost", 8427, 8428, 0));
@@ -60,18 +60,20 @@ public class GreedyCloudlet {
 		//Keep  updating server latencies, every 5 seconds.
 		LatencyThread latencyThread=cloudlet.new LatencyThread();
 		new Thread(latencyThread).start();
-		Thread.sleep(10000);
-/*		ServerSocket serverSocket = null;
+		
+		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(8423);
 		} catch (IOException e) {
 			e.printStackTrace();
-		}*/
+		}
+		
+		
 		//Create a new ProcessImage object and start processing image in a new thread.
 		//COMMENT THIS LATER
-		ProcessImage processImage = cloudlet.new ProcessImage(null);
-		new Thread(processImage).start();
-/*		// Listen for incoming clients.
+		/*ProcessImage processImage = cloudlet.new ProcessImage(null);
+		new Thread(processImage).start();*/
+		// Listen for incoming clients.
 		//UNCOMMENT THIS LATER!!!!!!!!!!
 		while (true) {
 			Socket clientSocket = null;
@@ -83,7 +85,7 @@ public class GreedyCloudlet {
 			//Create a new ProcessImage object and start processing image in a new thread.
 			ProcessImage processImage = cloudlet.new ProcessImage(clientSocket);
 			new Thread(processImage).start();
-		}*/
+		}
 	}
 	/*
 	 * Get the server latencies & processing times. 
@@ -129,6 +131,8 @@ public class GreedyCloudlet {
 		//To keep track of how much response time is added to a particular Ip address in 
 		//currentResponseTimeMap. This is done so that we can subtract this time after server
 		//has processed that image. 
+		byte[]faceBytes = null;
+		int rows = 0, columns = 0, type = 0;
 		
 		public ProcessImage(Socket clientSocket) {
 			this.clientSocket = clientSocket;
@@ -137,19 +141,32 @@ public class GreedyCloudlet {
 		}
 
 		public void run() {
-			ObjectInputStream objectInputStream;
+			System.out.println("NEW PROCESS IMAGE THREAD");
+			ObjectInputStream ois;
 			Mat imageMatrix = null;
-/*			try {
-				objectInputStream = new ObjectInputStream(
-						clientSocket.getInputStream());
-				imageMatrix = (Mat) objectInputStream.readObject();
+			try {
+/*				objectInputStream = new ObjectInputStream(
+						clientSocket.getInputStream());*/
+				
+				
+				ois = new ObjectInputStream(clientSocket.getInputStream());
+				rows=ois.readInt();
+				columns=ois.readInt();
+				type=ois.readInt();
+				faceBytes= (byte[]) ois.readObject();
+				
+				System.out.println("Received byte data of size" +faceBytes.length+" rows:"+rows+";columns="+columns+";type="+type);
+				imageMatrix=new Mat(rows,columns,type);
+				imageMatrix.put(0, 0, faceBytes);
+				
+				//imageMatrix = (Mat) objectInputStream.readObject();
 				System.out.println("Received incoming image");
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
-			}*/
-	        imageMatrix = Imgcodecs.imread("C:\\Users\\shobhitdutia\\Google Drive\\workspace_gdrive\\OpenCVFaceRecog\\bin\\testImage\\s310.pgm");
+			}
+	       // imageMatrix = Imgcodecs.imread("C:\\Users\\shobhitdutia\\Google Drive\\workspace_gdrive\\OpenCVFaceRecog\\bin\\testImage\\9.jpg");
 			FaceDetection faceDetection = new FaceDetection();
 			System.out.println("Detecting faces in image");
 			
@@ -266,7 +283,7 @@ public class GreedyCloudlet {
 		            System.out.println("Writing");
 		            Imgproc.putText(imageMatrix, smallestScore+"", 
                     		new Point(40,40), Core.FONT_HERSHEY_PLAIN,1.3,new Scalar(0,0,200),2);
-		            Imgcodecs.imwrite("frame.pgm", imageMatrix);	
+		            Imgcodecs.imwrite("frame.png", imageMatrix);	
 		            
 	                long endTime=System.currentTimeMillis();
 	                long time=endTime-startTime;
